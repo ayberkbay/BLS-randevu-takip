@@ -1,0 +1,36 @@
+name: BLS Randevu Kontrol
+
+on:
+  schedule:
+    # Her 5 dakikada bir çalışır (GitHub'ın izin verdiği en kısa aralık).
+    # NOT: GitHub yoğun saatlerde birkaç dakika gecikmeli tetikleyebilir,
+    # bu normaldir.
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}   # Bu sayede "Actions" sekmesinden elle de tetikleyebilirsiniz (test için)
+
+jobs:
+  kontrol-et:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Kodları indir
+        uses: actions/checkout@v4
+
+      - name: Python kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Bağımlılıkları kur
+        run: pip install -r requirements.txt
+
+      - name: Chrome kurulu mu kontrol et
+        run: google-chrome --version || (sudo apt-get update && sudo apt-get install -y google-chrome-stable)
+
+      - name: Kontrol scriptini çalıştır
+        env:
+          BLS_USERNAME: ${{ secrets.BLS_USERNAME }}
+          BLS_PASSWORD: ${{ secrets.BLS_PASSWORD }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python3 bls_kontrol.py
